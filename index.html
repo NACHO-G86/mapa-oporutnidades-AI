@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa de Oportunidades con AI</title>
+  <meta name="description" content="Descubre y comparte oportunidades de negocio detectadas con inteligencia artificial en ciudades de todo el mundo." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #12121a; --surface2: #1a1a28; --border: #2a2a40;
+      --accent: #7c5cfc; --accent2: #a78bfa; --accent3: #38bdf8;
+      --green: #22d3a0; --yellow: #fbbf24; --red: #f87171;
+      --text: #e8e8f0; --text2: #9090b0; --text3: #5a5a80;
+      --radius: 16px; --radius-sm: 10px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: Inter, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+    header { background: linear-gradient(135deg,#0d0d1a,#12102a,#0a0f1a); border-bottom: 1px solid var(--border); padding: 28px 24px 24px; text-align: center; position: relative; overflow: hidden; }
+    header::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 80% 60% at 50% 0%,rgba(124,92,252,.18),transparent 70%); pointer-events:none; }
+    .header-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(124,92,252,.15); border:1px solid rgba(124,92,252,.4); border-radius:999px; padding:4px 14px; font-size:12px; font-weight:600; color:var(--accent2); margin-bottom:14px; letter-spacing:.05em; text-transform:uppercase; }
+    h1 { font-size:clamp(1.8rem,5vw,3rem); font-weight:800; background:linear-gradient(135deg,#fff,var(--accent2),var(--accent3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:10px; letter-spacing:-.02em; }
+    .header-sub { color:var(--text2); font-size:1rem; max-width:520px; margin:0 auto 20px; }
+    .btn-new { display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg,var(--accent),#5b3fd4); color:#fff; font-weight:700; font-size:.95rem; padding:12px 28px; border-radius:999px; border:none; cursor:pointer; transition:all .2s; box-shadow:0 4px 24px rgba(124,92,252,.4); }
+    .btn-new:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(124,92,252,.5); }
+    .stats-bar { display:flex; justify-content:center; gap:32px; padding:16px 24px; background:var(--surface); border-bottom:1px solid var(--border); flex-wrap:wrap; }
+    .stat { text-align:center; }
+    .stat-num { font-size:1.5rem; font-weight:800; background:linear-gradient(135deg,var(--accent2),var(--accent3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .stat-label { font-size:.75rem; color:var(--text3); font-weight:500; text-transform:uppercase; letter-spacing:.05em; }
+    .filters-section { padding:20px 24px; max-width:1200px; margin:0 auto; }
+    .filters-row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .filter-label { font-size:.8rem; color:var(--text3); font-weight:600; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
+    .filter-select,.filter-input { background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:var(--radius-sm); padding:9px 14px; font-size:.875rem; font-family:Inter,sans-serif; cursor:pointer; transition:border-color .2s; flex:1; min-width:140px; }
+    .filter-select:focus,.filter-input:focus { outline:none; border-color:var(--accent); }
+    .filter-select option { background:#1a1a28; }
+    .btn-clear { background:transparent; border:1px solid var(--border); color:var(--text2); border-radius:var(--radius-sm); padding:9px 16px; font-size:.875rem; cursor:pointer; transition:all .2s; white-space:nowrap; }
+    .btn-clear:hover { border-color:var(--accent); color:var(--accent2); }
+    .main-content { max-width:1200px; margin:0 auto; padding:0 24px 48px; }
+    .section-title { font-size:.8rem; color:var(--text3); font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin-bottom:16px; }
+    #count-info { color:var(--accent2); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:20px; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px; display:flex; flex-direction:column; gap:14px; transition:all .25s; position:relative; overflow:hidden; }
+    .card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--accent3)); opacity:0; transition:opacity .25s; }
+    .card:hover { border-color:rgba(124,92,252,.4); transform:translateY(-3px); box-shadow:0 12px 40px rgba(0,0,0,.4); }
+    .card:hover::before { opacity:1; }
+    .card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+    .card-title { font-size:1.05rem; font-weight:700; color:#fff; flex:1; }
+    .badge-category { display:inline-block; padding:3px 10px; border-radius:999px; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; flex-shrink:0; }
+    .card-location { display:flex; align-items:center; gap:6px; color:var(--text2); font-size:.85rem; }
+    .location-dot { width:7px; height:7px; border-radius:50%; background:var(--accent3); flex-shrink:0; }
+    .card-field { display:flex; flex-direction:column; gap:3px; }
+    .field-label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); }
+    .field-value { font-size:.875rem; color:var(--text2); line-height:1.5; }
+    .ai-value { color:var(--accent2); font-size:.875rem; line-height:1.5; }
+    .potential-pill { padding:3px 12px; border-radius:999px; font-size:.75rem; font-weight:700; text-transform:uppercase; display:inline-block; }
+    .pot-alto { background:rgba(34,211,160,.15); color:var(--green); border:1px solid rgba(34,211,160,.3); }
+    .pot-medio { background:rgba(251,191,36,.15); color:var(--yellow); border:1px solid rgba(251,191,36,.3); }
+    .pot-bajo { background:rgba(248,113,113,.15); color:var(--red); border:1px solid rgba(248,113,113,.3); }
+    .card-footer { display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
+    .card-date { font-size:.75rem; color:var(--text3); }
+    .btn-like { display:flex; align-items:center; gap:6px; background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.25); color:#f87171; border-radius:999px; padding:6px 14px; font-size:.85rem; font-weight:600; cursor:pointer; transition:all .2s; }
+    .btn-like:hover { background:rgba(248,113,113,.2); transform:scale(1.05); }
+    .btn-like.liked { background:rgba(248,113,113,.25); border-color:#f87171; }
+    .empty-state { text-align:center; padding:80px 24px; color:var(--text3); }
+    .empty-state .emoji { font-size:3rem; margin-bottom:16px; }
+    .loader-wrap { text-align:center; padding:60px; }
+    .loader { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 16px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    #toast { position:fixed; bottom:32px; right:32px; background:var(--surface2); border:1px solid var(--border); border-left:4px solid var(--accent); color:var(--text); padding:14px 22px; border-radius:var(--radius-sm); font-size:.9rem; font-weight:500; box-shadow:0 8px 32px rgba(0,0,0,.5); transform:translateX(120%); transition:transform .35s cubic-bezier(.34,1.56,.64,1); z-index:9999; max-width:320px; }
+    #toast.show { transform:translateX(0); }
+    #toast.success { border-left-color:var(--green); }
+    #toast.error { border-left-color:var(--red); }
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); backdrop-filter:blur(6px); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity .25s; }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+    .modal { background:var(--surface); border:1px solid var(--border); border-radius:20px; width:100%; max-width:580px; max-height:90vh; overflow-y:auto; padding:32px; transform:scale(.95) translateY(10px); transition:transform .25s cubic-bezier(.34,1.56,.64,1); scrollbar-width:thin; }
+    .modal-overlay.open .modal { transform:scale(1) translateY(0); }
+    .modal-title { font-size:1.4rem; font-weight:800; margin-bottom:6px; background:linear-gradient(135deg,#fff,var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .modal-sub { color:var(--text3); font-size:.875rem; margin-bottom:24px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .form-full { grid-column:1/-1; }
+    .form-field { display:flex; flex-direction:column; gap:6px; }
+    label { font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text3); }
+    input,select,textarea { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); padding:11px 14px; font-size:.9rem; font-family:Inter,sans-serif; width:100%; transition:border-color .2s; }
+    input::placeholder,textarea::placeholder { color:var(--text3); }
+    input:focus,select:focus,textarea:focus { outline:none; border-color:var(--accent); }
+    textarea { resize:vertical; min-height:80px; }
+    select option { background:#1a1a28; }
+    .modal-actions { display:flex; gap:12px; margin-top:24px; justify-content:flex-end; }
+    .btn-cancel { background:transparent; border:1px solid var(--border); color:var(--text2); border-radius:999px; padding:11px 24px; font-size:.9rem; cursor:pointer; transition:all .2s; }
+    .btn-cancel:hover { border-color:var(--text2); }
+    .btn-submit { background:linear-gradient(135deg,var(--accent),#5b3fd4); color:#fff; border:none; border-radius:999px; padding:11px 28px; font-size:.9rem; font-weight:700; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:8px; }
+    .btn-submit:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(124,92,252,.4); }
+    .btn-submit:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+    ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-thumb { background:var(--border); border-radius:999px; }
+    @media(max-width:640px) { .filters-row { flex-direction:column; align-items:stretch; } .form-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">🌍 Oportunidades Globales con AI</div>
+  <h1>Mapa de Oportunidades con AI</h1>
+  <p class="header-sub">Descubre y comparte oportunidades de negocio detectadas con inteligencia artificial en ciudades de todo el mundo.</p>
+  <button class="btn-new" id="btn-open-modal">✦ Publicar Oportunidad</button>
+</header>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Oportunidades</div></div>
+  <div class="stat"><div class="stat-num" id="stat-cities">0</div><div class="stat-label">Ciudades</div></div>
+  <div class="stat"><div class="stat-num" id="stat-countries">0</div><div class="stat-label">Países</div></div>
+  <div class="stat"><div class="stat-num" id="stat-likes">0</div><div class="stat-label">Likes totales</div></div>
+</div>
+
+<div class="filters-section">
+  <div class="filters-row">
+    <span class="filter-label">🔍 Filtrar:</span>
+    <input class="filter-input" id="filter-city" placeholder="Ciudad..." />
+    <input class="filter-input" id="filter-country" placeholder="País..." />
+    <select class="filter-select" id="filter-category">
+      <option value="">Todas las categorías</option>
+      <option>Salud</option><option>Educación</option><option>Logística</option>
+      <option>Finanzas</option><option>Comercio</option><option>Turismo</option>
+      <option>Agricultura</option><option>Tecnología</option>
+      <option>Medio Ambiente</option><option>Entretenimiento</option><option>Otro</option>
+    </select>
+    <button class="btn-clear" id="btn-clear-filters">✕ Limpiar</button>
+  </div>
+</div>
+
+<main class="main-content">
+  <p class="section-title">Mostrando <span id="count-info">0</span> oportunidades</p>
+  <div class="grid" id="cards-grid">
+    <div class="loader-wrap" id="loader">
+      <div class="loader"></div>
+      <p style="color:var(--text3)">Cargando oportunidades...</p>
+    </div>
+  </div>
+  <div class="empty-state" id="empty-state" style="display:none">
+    <div class="emoji">🌐</div>
+    <p>No hay oportunidades que coincidan.<br>¡Sé el primero en publicar una!</p>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2 class="modal-title">✦ Nueva Oportunidad</h2>
+    <p class="modal-sub">Comparte una oportunidad de negocio detectada con AI en tu ciudad.</p>
+    <form id="opp-form">
+      <div class="form-grid">
+        <div class="form-field"><label for="f-name">Nombre de la oportunidad</label><input id="f-name" type="text" placeholder="Ej: Telemedicina Rural" required /></div>
+        <div class="form-field"><label for="f-city">Ciudad</label><input id="f-city" type="text" placeholder="Ej: Bogotá" required /></div>
+        <div class="form-field"><label for="f-country">País</label><input id="f-country" type="text" placeholder="Ej: Colombia" required /></div>
+        <div class="form-field">
+          <label for="f-category">Categoría</label>
+          <select id="f-category" required>
+            <option value="">Seleccionar...</option>
+            <option>Salud</option><option>Educación</option><option>Logística</option>
+            <option>Finanzas</option><option>Comercio</option><option>Turismo</option>
+            <option>Agricultura</option><option>Tecnología</option>
+            <option>Medio Ambiente</option><option>Entretenimiento</option><option>Otro</option>
+          </select>
+        </div>
+        <div class="form-field form-full"><label for="f-problem">Problema detectado</label><textarea id="f-problem" placeholder="Describe el problema o necesidad que existe en esa ciudad..." required></textarea></div>
+        <div class="form-field form-full"><label for="f-ai-solution">Solución con IA</label><textarea id="f-ai-solution" placeholder="¿Cómo puede resolverse este problema usando inteligencia artificial?" required></textarea></div>
+        <div class="form-field form-full">
+          <label for="f-potential">Potencial de mercado</label>
+          <select id="f-potential" required>
+            <option value="">Seleccionar...</option>
+            <option>Alto</option><option>Medio</option><option>Bajo</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="btn-cancel">Cancelar</button>
+        <button type="submit" class="btn-submit" id="btn-submit"><span id="btn-submit-txt">Publicar oportunidad</span></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const SUPABASE_URL = 'https://waiizladqxgtqxtnonfs.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndhaWl6bGFkcXhndHF4dG5vbmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2MjU0NTcsImV4cCI6MjEwNzIwMTQ1N30.3MiMNfsHKcQ5aoAZiF3GNH8myyZBFzHUAe0nilR2H7A';
+  const HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+
+  const $ = id => document.getElementById(id);
+  let allOpps = [];
+
+  function showToast(msg, type) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.className = 'show ' + (type || '');
+    setTimeout(() => { t.className = ''; }, 3000);
+  }
+
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function categoryColor(cat) {
+    const m = { 'Salud':['#22d3a0','rgba(34,211,160,0.15)'], 'Educacion':['#38bdf8','rgba(56,189,248,0.15)'], 'Educación':['#38bdf8','rgba(56,189,248,0.15)'], 'Logística':['#fb923c','rgba(251,146,60,0.15)'], 'Finanzas':['#fbbf24','rgba(251,191,36,0.15)'], 'Comercio':['#a78bfa','rgba(167,139,250,0.15)'], 'Turismo':['#f472b6','rgba(244,114,182,0.15)'], 'Agricultura':['#4ade80','rgba(74,222,128,0.15)'], 'Tecnología':['#7c5cfc','rgba(124,92,252,0.15)'], 'Medio Ambiente':['#34d399','rgba(52,211,153,0.15)'], 'Entretenimiento':['#f87171','rgba(248,113,113,0.15)'] };
+    return m[cat] || ['#9090b0','rgba(144,144,176,0.15)'];
+  }
+
+  function potClass(p) {
+    if (!p) return '';
+    const l = p.toLowerCase();
+    if (l==='alto') return 'pot-alto';
+    if (l==='medio') return 'pot-medio';
+    return 'pot-bajo';
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function fetchAll() {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/opportunities?select=*&order=created_at.desc', { headers: HEADERS });
+    if (!r.ok) throw new Error('Error al cargar');
+    return r.json();
+  }
+
+  async function insertOpp(data) {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/opportunities', { method:'POST', headers:HEADERS, body:JSON.stringify(data) });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.message || 'Error al publicar'); }
+    return r.json();
+  }
+
+  async function patchLikes(id, likes) {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/opportunities?id=eq.' + id, { method:'PATCH', headers:HEADERS, body:JSON.stringify({ likes: likes }) });
+    if (!r.ok) throw new Error('Error al dar like');
+  }
+
+  function updateStats(opps) {
+    $('stat-total').textContent = opps.length;
+    $('stat-cities').textContent = new Set(opps.map(o => o.city.toLowerCase())).size;
+    $('stat-countries').textContent = new Set(opps.map(o => o.country.toLowerCase())).size;
+    $('stat-likes').textContent = opps.reduce((a,o) => a+(o.likes||0), 0);
+  }
+
+  function renderCards(opps) {
+    const grid = $('cards-grid');
+    $('count-info').textContent = opps.length;
+    if (opps.length === 0) { grid.innerHTML = ''; $('empty-state').style.display = 'block'; return; }
+    $('empty-state').style.display = 'none';
+    grid.innerHTML = opps.map(o => {
+      const [col, bg] = categoryColor(o.category);
+      return '<article class="card">' +
+        '<div class="card-header"><div class="card-title">' + esc(o.name) + '</div>' +
+        '<span class="badge-category" style="color:' + col + ';background:' + bg + ';border:1px solid ' + col + '40">' + esc(o.category) + '</span></div>' +
+        '<div class="card-location"><span class="location-dot"></span><span>' + esc(o.city) + ', ' + esc(o.country) + '</span></div>' +
+        '<div class="card-field"><span class="field-label">⚠ Problema</span><span class="field-value">' + esc(o.problem) + '</span></div>' +
+        '<div class="card-field"><span class="field-label">🤖 Solución con IA</span><span class="ai-value">' + esc(o.ai_solution) + '</span></div>' +
+        '<div class="card-field"><span class="field-label">📈 Potencial</span><span class="potential-pill ' + potClass(o.potential) + '">' + esc(o.potential) + '</span></div>' +
+        '<div class="card-footer"><span class="card-date">' + formatDate(o.created_at) + '</span>' +
+        '<button class="btn-like" data-id="' + esc(o.id) + '" data-likes="' + (o.likes||0) + '">♥ <span class="like-count">' + (o.likes||0) + '</span></button></div>' +
+        '</article>';
+    }).join('');
+
+    grid.querySelectorAll('.btn-like').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        if (this.disabled) return;
+        this.disabled = true;
+        const id = this.dataset.id;
+        const cur = parseInt(this.dataset.likes) || 0;
+        const nxt = cur + 1;
+        this.querySelector('.like-count').textContent = nxt;
+        this.dataset.likes = nxt;
+        this.classList.add('liked');
+        try {
+          await patchLikes(id, nxt);
+          const opp = allOpps.find(o => o.id === id);
+          if (opp) opp.likes = nxt;
+          updateStats(allOpps);
+          showToast('❤️ ¡Like registrado!', 'success');
+        } catch {
+          this.querySelector('.like-count').textContent = cur;
+          this.dataset.likes = cur;
+          this.classList.remove('liked');
+          showToast('❌ Error al dar like', 'error');
+        } finally { this.disabled = false; }
+      });
+    });
+  }
+
+  function applyFilters() {
+    const city = $('filter-city').value.trim().toLowerCase();
+    const country = $('filter-country').value.trim().toLowerCase();
+    const cat = $('filter-category').value;
+    const f = allOpps.filter(o =>
+      (!city || o.city.toLowerCase().includes(city)) &&
+      (!country || o.country.toLowerCase().includes(country)) &&
+      (!cat || o.category === cat)
+    );
+    renderCards(f);
+  }
+
+  async function load() {
+    const l = $('loader');
+    if(l) l.style.display = 'block';
+    try {
+      allOpps = await fetchAll();
+      updateStats(allOpps);
+      applyFilters();
+    } catch(e) {
+      showToast('❌ ' + e.message, 'error');
+      $('cards-grid').innerHTML = '';
+    } finally { if(l) l.style.display = 'none'; }
+  }
+
+  $('filter-city').addEventListener('input', applyFilters);
+  $('filter-country').addEventListener('input', applyFilters);
+  $('filter-category').addEventListener('change', applyFilters);
+  $('btn-clear-filters').addEventListener('click', () => { $('filter-city').value=''; $('filter-country').value=''; $('filter-category').value=''; applyFilters(); });
+
+  const overlay = $('modal-overlay');
+  $('btn-open-modal').addEventListener('click', () => overlay.classList.add('open'));
+  $('btn-cancel').addEventListener('click', () => overlay.classList.remove('open'));
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.classList.remove('open'); });
+
+  $('opp-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = $('btn-submit'), txt = $('btn-submit-txt');
+    btn.disabled = true; txt.textContent = 'Publicando...';
+    const data = { name:$('f-name').value.trim(), city:$('f-city').value.trim(), country:$('f-country').value.trim(), category:$('f-category').value, problem:$('f-problem').value.trim(), ai_solution:$('f-ai-solution').value.trim(), potential:$('f-potential').value, likes:0 };
+    try {
+      await insertOpp(data);
+      overlay.classList.remove('open');
+      this.reset();
+      showToast('✅ ¡Oportunidad publicada!', 'success');
+      await load();
+    } catch(err) { showToast('❌ ' + err.message, 'error'); }
+    finally { btn.disabled=false; txt.textContent='Publicar oportunidad'; }
+  });
+
+  load();
+</script>
+</body>
+</html>
